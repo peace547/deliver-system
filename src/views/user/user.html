@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>发货管理系统</title>
+    <!-- import Vue before Element -->
+    <script src="../../resource/vendor/vue/vue_dev.js"></script>
+    <!-- import JavaScript -->
+    <script src="../../resource/vendor/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="../../resource/vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../../resource/css/common/global.css">
+</head>
+<body>
+<div id="app" v-cloak>
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item>系统管理</el-breadcrumb-item>
+        <el-breadcrumb-item>用户列表</el-breadcrumb-item>
+    </el-breadcrumb>
+    <div class="search_area search">
+        <el-form ref="searchForm" :model="searchForm" label-width="70px" size="small" :inline="true">
+            <el-form-item label="用户名称" prop="name">
+                <el-input v-model="searchForm.name" placeholder="用户名称"></el-input>
+            </el-form-item>
+            <el-form-item label="状态" prop="status">
+                <el-select v-model="searchForm.status" placeholder="用户状态">
+                    <el-option v-for="(status) in statusOptions"
+                               :key="status.code" :label="status.desc" :value="status.code">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="onSearch()" icon="el-icon-search">搜索</el-button>
+                <el-button @click="onReset" icon="el-icon-refresh">重置</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+    <div class="table_area dialog" v-loading="loading">
+        <el-row>
+            <el-button type="success" plain size="small" icon="el-icon-circle-plus-outline" @click="openAddDialog()">新增</el-button>
+            <el-button type="primary" plain size="small" icon="el-icon-edit" @click="openEditDialog()">编辑</el-button>
+            <el-button type="danger" plain size="small" icon="el-icon-delete" @click="handleDelete()">删除</el-button>
+        </el-row>
+        <el-table ref="multipleTable" tooltip-effect="dark"
+                  @row-click="handleRowClick"
+                  @selection-change="handleSelectionChange"
+                  :data="user_list" style="width: 100%"
+                  :stripe="true">
+            <el-table-column type="selection" width="50"></el-table-column>
+            <el-table-column prop="name" label="用户名称" width="100"></el-table-column>
+            <el-table-column prop="code" label="用户编码" width="120"></el-table-column>
+            <el-table-column prop="sex" label="性别" width="50" :formatter="sexFormatter"></el-table-column>
+            <el-table-column prop="phone" label="联系方式" width="130"></el-table-column>
+            <el-table-column prop="status" label="状态" width="80" :formatter="statusFormatter"></el-table-column>
+            <el-table-column prop="createTime" label="创建时间" width="180" :formatter="dateFormatter"></el-table-column>
+            <el-table-column prop="createPerson" label="创建人" width="100"></el-table-column>
+            <el-table-column prop="updateTime" label="更新时间" width="180" :formatter="dateFormatter"></el-table-column>
+            <el-table-column prop="updatePerson" label="更新人" width="100"></el-table-column>
+            <el-table-column label="操作" column-key="optionColumn">
+                <template slot-scope="scope">
+                    <el-button size="mini" :type="scope.row.status === 1 ? 'danger' : 'success'"
+                               @click="changeStatus(scope.row)">{{scope.row.status === 1 ? '禁用' : '启用'}}
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+    <el-dialog :title="isAdd | dialogTitleFilter" :visible.sync="editDialogVisible">
+        <el-form ref="userForm" :model="userForm" :rules="rules" label-width="100px">
+            <el-form-item label="用户编码" prop="code">
+                <el-input v-model="userForm.code" auto-complete="off" :disabled="!isAdd"></el-input>
+            </el-form-item>
+            <el-form-item label="用户名字" prop="name">
+                <el-input v-model="userForm.name" auto-complete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="性别" prop="sex">
+                <el-radio-group v-model="userForm.sex">
+                    <el-radio v-for="(sex) in sexOptions"
+                              :key="sex.code" :label="sex.code">{{sex.desc}}
+                    </el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="联系方式" prop="phone">
+                <el-input v-model="userForm.phone" auto-complete="off"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="editDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="addOrEditUser()">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+</body>
+<script src="../../resource/vendor/lodash.min.js"></script>
+<script src="../../resource/vendor/moment.js"></script>
+<script src="../../resource/js/common/webSqlUtils.js"></script>
+<script src="../../resource/js/user.js"></script>
+</html>

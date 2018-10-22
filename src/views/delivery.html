@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>送货单打印</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../resource/vendor/bootstrap/css/bootstrap.min.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../resource/vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../resource/vendor/bootstrap/css/datetimepicker.css">
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        #app {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .content {
+            margin: 0 auto;
+            width: 1000px;
+            padding: 30px;
+        }
+        .h2 {
+            margin-bottom: 40px;
+        }
+        table.box {
+            border: 1px solid #dcdcdc;
+            border-collapse: collapse;
+            text-align: center;
+            width: 100%;
+            line-height: 40px;
+            margin-bottom: 40px;
+        }
+        table input{
+            border: none;
+            width: 100%;
+            padding-left: 5px;
+        }
+        .addItem, .delItem {
+            color: #4b77be;
+            min-width: 40px;
+            display: block;
+            cursor: pointer;
+        }
+        .delItem {
+            color: red;
+            font-size: 14px;
+        }
+        .padding-left {
+            padding-left: 8px;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="container">
+    <div class="content">
+        <h2 class="h2 text-center">送货单</h2>
+        <form class="form-horizontal">
+            <div class="form-group">
+                <label for="inputEmail3" class="col-sm-2 control-label">订 单 编 号：</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" v-model="detailInfo.orderId" placeholder="请填写订单编号">
+                </div>
+                <label for="inputEmail3" class="col-sm-2 control-label">送 货 日 期：</label>
+                <div class="col-sm-4">
+                    <div class="input-append date form_datetime">
+                        <input size="16" class="form-control" type="text" id="deliveryDate" readonly>
+                        <span class="add-on"><i class="icon-th"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="inputEmail3" class="col-sm-2 control-label">送货单位名称：</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" v-model="detailInfo.sendInfo.company" placeholder="请填写送货单位名称">
+                </div>
+                <label for="inputEmail3" class="col-sm-2 control-label">送货单位地址：</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" v-model="detailInfo.sendInfo.address" placeholder="请填写送货单位地址">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="inputEmail3" class="col-sm-2 control-label">经 办 个 人：</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" v-model="detailInfo.sendInfo.person" placeholder="请填写经办个人">
+                </div>
+                <label for="inputEmail3" class="col-sm-2 control-label">联 系 电 话：</label>
+                <div class="col-sm-4">
+                    <input type="tel" class="form-control" v-model="detailInfo.sendInfo.telephone" placeholder="请填写送货联系电话">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="inputEmail3" class="col-sm-2 control-label">收货单位名称：</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" v-model="detailInfo.getInfo.company" placeholder="请填写收货单位名称">
+                </div>
+                <label for="inputEmail3" class="col-sm-2 control-label">收货单位地址：</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" v-model="detailInfo.getInfo.address" placeholder="请填写收货单位地址">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="inputEmail3" class="col-sm-2 control-label">收货联系人：</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" v-model="detailInfo.getInfo.person" placeholder="请填写收货联系人">
+                </div>
+                <label for="inputEmail3" class="col-sm-2 control-label">联 系 电 话：</label>
+                <div class="col-sm-4">
+                    <input type="tel" class="form-control" v-model="detailInfo.getInfo.telephone" placeholder="请填写送货联系电话">
+                </div>
+            </div>
+            <table border="1" class="box">
+                <thead>
+                <tr>
+                    <td width="4%">序号</td>
+                    <td width="12%">品名</td>
+                    <td width="8%">规格</td>
+                    <td width="4%">单价</td>
+                    <td width="5%">数量</td>
+                    <td width="4%">单位</td>
+                    <td width="5%">总计</td>
+                    <td width="6%">装箱总件数</td>
+                    <td width="5%">附件/件</td>
+                    <td width="10%">备注</td>
+                    <td width="4%"><span class="addItem" @click="addItem">新增</span></td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(item, index) in list">
+                    <td><input type="text" v-model="index" style="padding-left: 20px;" readonly></td>
+                    <td><input type="text" v-model="item.name"></td>
+                    <td><input type="text" v-model="item.format"></td>
+                    <td><input type="text" v-model="item.price"></td>
+                    <td><input type="text" v-model="item.number"></td>
+                    <td><input type="text" v-model="item.unit"></td>
+                    <td><input type="text" v-model="priceTotals(item)"></td>
+                    <td><input type="text" v-model="item.total"></td>
+                    <td><input type="text" v-model="item.attachment"></td>
+                    <td><input type="text" v-model="item.remark"></td>
+                    <td>
+                        <span class="delItem" v-if="list.length>=1" @click="delItem(index)">删除</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-right" colspan="11" style="padding-right: 20px;">总计:{{allPrice}}</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="text-center">
+                <button type="button" class="btn btn-primary btn-lg" @click="print">打印</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="display: none;">
+        <div id="print-content">
+            <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; text-align: center; font-size: 12px; line-height: 26px; width: 100%;">
+                <tr><td colspan="4" style="font-size: 16px; height: 40px;">送货单</td></tr>
+                <tr>
+                    <td width="16%">送货单位名称</td>
+                    <td width="34%">{{detailInfo.sendInfo.company}}</td>
+                    <td width="16%">订单编号</td>
+                    <td width="34%">{{detailInfo.orderId}}</td>
+                </tr>
+                <tr>
+                    <td>送单位地址</td>
+                    <td>{{detailInfo.sendInfo.address}}</td>
+                    <td>收货单位名称</td>
+                    <td>{{detailInfo.getInfo.company}}</td>
+                </tr>
+                <tr>
+                    <td>经办个人</td>
+                    <td>{{detailInfo.sendInfo.person}}</td>
+                    <td>收货单位地址</td>
+                    <td>{{detailInfo.getInfo.address}}</td>
+                </tr>
+                <tr>
+                    <td>联系电话</td>
+                    <td>{{detailInfo.sendInfo.telephone}}</td>
+                    <td>收货联系人</td>
+                    <td>{{detailInfo.getInfo.person}}</td>
+                </tr>
+                <tr>
+                    <td>送货日期</td>
+                    <td>{{detailInfo.sendInfo.date}}</td>
+                    <td>联系电话</td>
+                    <td>{{detailInfo.getInfo.telephone}}</td>
+                </tr>
+            </table>
+            <table style="border-left: 1px solid #000000;border-right: 1px solid #000000; width: 100%; font-size: 12px; line-height: 26px;">
+                <tr>
+                    <td style="padding-left: 5px;">发送产品列表如下：</td>
+                </tr>
+            </table>
+            <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; width: 100%; text-align: center; font-size: 12px; line-height: 26px;">
+                <tr>
+                    <td width="5%">序号</td>
+                    <td width="19%">品名</td>
+                    <td width="14%">规格</td>
+                    <td width="7%">数量</td>
+                    <td width="5%">单位</td>
+                    <td width="5%">单价</td>
+                    <td width="10%">装箱总件数</td>
+                    <td width="7%">附件/件</td>
+                    <td width="8%">总价</td>
+                    <td width="20%">备注</td>
+                </tr>
+                <tr v-for="(item, index) in list" v-if="item.name">
+                    <td>{{index}}</td>
+                    <td>{{item.name}}</td>
+                    <td>{{item.format}}</td>
+                    <td>{{item.number}}</td>
+                    <td>{{item.unit}}</td>
+                    <td>{{item.price}}</td>
+                    <td>{{item.total}}</td>
+                    <td>{{item.attachment}}</td>
+                    <td>{{priceTotals(item)}}</td>
+                    <td>{{item.remark}}</td>
+                </tr>
+                <tr>
+                    <td colspan="2">总计:</td>
+                    <td colspan="8">{{allPrice}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="../resource/vendor/jquery.min.js"></script>
+<script type="text/javascript" src="../resource/vendor/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../resource/vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="../resource/vendor/bootstrap-datetimepicker/bootstrap-datetimepicker.zh-CN.js"></script>
+<script type="text/JavaScript" src="../resource/vendor/jquery-printarea/jquery.PrintArea.js"></script>
+<script type="text/javascript" src="../resource/vendor/vue/vue_dev.js"></script>
+<script>
+    var demo = new Vue({
+        el:'#app',
+        data:{
+            list: [
+                {
+                    name: '',
+                    format: '',
+                    price: '',
+                    number: '',
+                    unit: '只',
+                    total: '',
+                    attachment: '',
+                    remark: ''
+                }
+            ],
+            detailInfo: {
+                orderId: '',
+                sendInfo: {
+                    address: '宁波市鄞州区五乡镇蟠龙路',
+                    person: '林米娜',
+                    telephone: '13586768068',
+                    company: '宁波市鸿运仪表有限公司',
+                    date: ''
+                },
+                getInfo: {
+                    address: '',
+                    person: '',
+                    telephone: '',
+                    company: ''
+                }
+            }
+        },
+        mounted: function() {
+            var _this = this;
+            $(".form_datetime").datetimepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                todayBtn: true,
+                todayHighlight: true,
+                minView: 2,
+                language: 'zh-CN'
+            }).on('changeDate', function (ev) {
+                _this.detailInfo.sendInfo.date = $('#deliveryDate').val();
+            });
+            this.detailInfo.sendInfo.date = this.formatDate(new Date());
+            $('#deliveryDate').val(this.detailInfo.sendInfo.date);
+        },
+        methods: {
+            addItem () {
+                let newOne = {
+                    name: '',
+                    format: '',
+                    number: '',
+                    unit: '只',
+                    total: '',
+                    attachment: '',
+                    remark: ''
+                };
+                this.list.push(newOne);
+            },
+            delItem (index) {
+                this.list.splice(index, 1);
+            },
+            print () {
+                $("#print-content").printArea({
+                    mode: 'iframe',
+                    popClose: true
+                });
+            },
+            formatDate (time) {
+                let y = time.getFullYear();
+                let m = time.getMonth() + 1;
+                m = m < 10 ? '0' + m : m;
+                let d = time.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                return y + '-' + m + '-' + d;
+            },
+            priceTotals (item) {
+                if (item.price && item.number) {
+                    return item.price * item.number;
+                }
+            }
+        },
+        computed: {
+            allPrice () {
+                let count = 0;
+                this.list.forEach(item => {
+                    if (item.price && item.number) {
+                        count += item.price * item.number;
+                    }
+                });
+                return count;
+            }
+        }
+    });
+</script>
+</html>

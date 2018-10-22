@@ -1,0 +1,50 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    font-size: 12px;
+    color: #333333;
+    font-family: "Microsoft YaHei", Helvetica, Arial, sans-serif;
+}
+
+iframe {
+    border: none;
+}
+
+.clear-fix {
+    *zoom: 1;
+}
+
+.clear-fix:before, .clear-fix:after {
+    display: table;
+    content: "";
+}
+
+.clear-fix:after {
+    clear: both;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.el-breadcrumb {
+    font-size: 13px;
+    padding: 10px 15px;
+}
+
+[v-cloak] {
+    display: none;
+}
+
+/*user delivery*/
+.search_area, .table_area {
+    background-color: #fff;
+    padding: 15px 15px 0 15px;
+    margin: 0 15px 15px;
+    border-radius: 3px;
+}
+
+.center_page {
+    padding: 20px;
+    text-align: center;
+}

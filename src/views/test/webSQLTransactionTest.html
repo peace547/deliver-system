@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>我就试一下</title>
+    <!-- import Vue before Element -->
+    <script src="../../resource/vendor/vue/vue_dev.js"></script>
+    <!-- import JavaScript -->
+    <script src="../../resource/vendor/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="../../resource/vendor/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .el-row {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试前，先创建一个表" placement="right">
+            <el-button type="primary" @click="createGoodsTable">生成表</el-button>
+        </el-tooltip>
+    </el-row>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试1：添加两条数据，两条全部成功" placement="right">
+            <el-button type="primary" @click="test1">测试1</el-button>
+        </el-tooltip>
+    </el-row>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试2：添加两条数据，第一条成功，第二条失败（不回滚）" placement="right">
+            <el-button type="primary" @click="test2">测试2</el-button>
+        </el-tooltip>
+    </el-row>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试3：添加两条数据，第一条失败，第二条成功（不回滚）" placement="right">
+            <el-button type="primary" @click="test3">测试3</el-button>
+        </el-tooltip>
+    </el-row>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试4：添加两条数据，第一条失败，在errorCallback中返回false，第二条成功（不回滚）" placement="right">
+            <el-button type="primary" @click="test4">测试4</el-button>
+        </el-tooltip>
+    </el-row>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试5：添加两条数据，第一条失败，没有errorCallback，第二条成功（回滚）" placement="right">
+            <el-button type="primary" @click="test5">测试5</el-button>
+        </el-tooltip>
+    </el-row>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试6：添加两条数据，第一条成功，第二条失败，errorCallback中返回true（回滚）" placement="right">
+            <el-button type="primary" @click="test6">测试6</el-button>
+        </el-tooltip>
+    </el-row>
+    <el-row>
+        <el-tooltip class="item" effect="dark" content="测试7：添加两条数据，第一条成功后successCallback中第二条失败，errorCallback中返回true（回滚）" placement="right">
+            <el-button type="primary" @click="test7">测试7</el-button>
+        </el-tooltip>
+    </el-row>
+</div>
+</body>
+<script language="javascript">
+    new Vue({
+        el: '#app',
+        data: {
+            database: {}
+        },
+        mounted() {
+            // 打开数据库连接
+            this.database = openDatabase('testDB', '1.0', '测试数据库', 1024 * 1024 * 5, function() {
+                console.log('创建或打开数据库完成');
+            });
+        },
+        methods: {
+            createGoodsTable(){
+                //IF not EXISTS
+                let createTableSql = "create table IF not EXISTS goods(id integer primary key autoincrement,name text not null,price double)";
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(createTableSql, [], (tx, result) => {
+                        console.log('创建表成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('创建表异常');
+                        console.log(error);
+                    })
+                }, (error) => {
+                    console.log('事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('事务success');
+                });
+            },
+            test1(){
+                let sql1 = "insert into goods(name, price) values(?,?)";
+                let sql2 = "insert into goods(name, price) values(?,?)";
+                let paramArr1 = ["苹果",10.99];
+                let paramArr2 = ["香蕉",8.99];
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(sql1, paramArr1, (tx, result) => {
+                        console.log('test1插入sql1成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test1插入sql1失败');
+                        console.log(error);
+                    });
+                    tx.executeSql(sql2, paramArr2, (tx, result) => {
+                        console.log('test1插入sql2成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test1插入sql2失败');
+                        console.log(error);
+                    });
+                }, (error) => {
+                    console.log('test1事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('test1事务success');
+                });
+            },
+            test2(){
+                let sql1 = "insert into goods(name, price) values(?,?)";
+                let sql2 = "insert into goods(name, price) values(?,?)";
+                let paramArr1 = ["苹果",10.99];
+                let paramArr2 = [null,8.99];
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(sql1, paramArr1, (tx, result) => {
+                        console.log('test2插入sql1成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test2插入sql1失败');
+                        console.log(error);
+                    });
+                    tx.executeSql(sql2, paramArr2, (tx, result) => {
+                        console.log('test2插入sql2成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test1插入sql2失败');
+                        console.log(error);
+                    });
+                }, (error) => {
+                    console.log('test2事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('test2事务success');
+                });
+            },
+            test3(){
+                let sql1 = "insert into goods(name, price) values(?,?)";
+                let sql2 = "insert into goods(name, price) values(?,?)";
+                let paramArr1 = [null,10.99];
+                let paramArr2 = ["香蕉",8.99];
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(sql1, paramArr1, (tx, result) => {
+                        console.log('test3插入sql1成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test3插入sql1失败');
+                        console.log(error);
+                    });
+                    tx.executeSql(sql2, paramArr2, (tx, result) => {
+                        console.log('test3插入sql2成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test3插入sql2失败');
+                        console.log(error);
+                    });
+                }, (error) => {
+                    console.log('test3事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('test3事务success');
+                });
+            },
+            test4(){
+                let sql1 = "insert into goods(name, price) values(?,?)";
+                let sql2 = "insert into goods(name, price) values(?,?)";
+                let paramArr1 = [null,10.99];
+                let paramArr2 = ["香蕉",8.99];
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(sql1, paramArr1, (tx, result) => {
+                        console.log('test4插入sql1成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test4插入sql1失败');
+                        console.log(error);
+                        return false;
+                    });
+                    tx.executeSql(sql2, paramArr2, (tx, result) => {
+                        console.log('test4插入sql2成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test4插入sql2失败');
+                        console.log(error);
+                    });
+                }, (error) => {
+                    console.log('test4事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('test4事务success');
+                });
+            },
+            test5(){
+                let sql1 = "insert into goods(name, price) values(?,?)";
+                let sql2 = "insert into goods(name, price) values(?,?)";
+                let paramArr1 = [null,10.99];
+                let paramArr2 = ["香蕉",8.99];
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(sql1, paramArr1, (tx, result) => {
+                        console.log('test5插入sql1成功');
+                        console.log(result);
+                    });
+                    tx.executeSql(sql2, paramArr2, (tx, result) => {
+                        console.log('test5插入sql2成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test5插入sql2失败');
+                        console.log(error);
+                    });
+                }, (error) => {
+                    console.log('test5事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('test5事务success');
+                });
+            },
+            test6(){
+                let sql1 = "insert into goods(name, price) values(?,?)";
+                let sql2 = "insert into goods(name, price) values(?,?)";
+                let paramArr1 = ["苹果",10.99];
+                let paramArr2 = [null,8.99];
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(sql1, paramArr1, (tx, result) => {
+                        console.log('test6插入sql1成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test6插入sql1失败');
+                        console.log(error);
+                    });
+                    tx.executeSql(sql2, paramArr2, (tx, result) => {
+                        console.log('test6插入sql2成功');
+                        console.log(result);
+                    }, (tx, error) => {
+                        console.log('test6插入sql2失败');
+                        console.log(error);
+                        return true;
+                    });
+                }, (error) => {
+                    console.log('test6事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('test6事务success');
+                });
+            },
+            test7(){
+                let sql1 = "insert into goods(name, price) values(?,?)";
+                let sql2 = "insert into goods(name, price) values(?,?)";
+                let paramArr1 = ["苹果",10.99];
+                let paramArr2 = [null,8.99];
+
+                this.database.transaction((tx) => {
+                    tx.executeSql(sql1, paramArr1, (tx, result) => {
+                        console.log('test7插入sql1成功');
+                        console.log(result);
+                        tx.executeSql(sql2, paramArr2, (tx, result) => {
+                            console.log('test7插入sql2成功');
+                            console.log(result);
+                        }, (tx, error) => {
+                            console.log('test7插入sql2失败');
+                            console.log(error);
+                            return true;
+                        });
+                    }, (tx, error) => {
+                        console.log('test7插入sql1失败');
+                        console.log(error);
+                    });
+                }, (error) => {
+                    console.log('test7事务error');
+                    console.log(error);
+                }, () => {
+                    console.log('test7事务success');
+                });
+            }
+        }
+    });
+</script>
+</html>

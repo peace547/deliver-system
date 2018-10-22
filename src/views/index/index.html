@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>发货管理系统</title>
+    <!-- import Vue before Element -->
+    <script src="../../resource/vendor/vue/vue_dev.js"></script>
+    <!-- import JavaScript -->
+    <script src="../../resource/vendor/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="../../resource/vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" type="text/css" href="../../resource/css/icon/iconfont.css">
+    <link rel="stylesheet" href="../../resource/css/common/global.css">
+    <link rel="stylesheet" href="../../resource/css/index.css">
+</head>
+<body>
+<div id="app" v-cloak>
+    <el-container>
+        <el-aside width="200px">
+            <div class="index-side-scroll">
+                <div class="index_logo">发货管理系统</div>
+                <div class="index-menu">
+                    <el-menu :default-active="activeMenuIndex" class="el-menu-vertical-demo"
+                             background-color="#23262e" text-color="#fff" active-text-color="#ffd04b"
+                             @select="handleSelect" ref="leftMenu">
+                        <el-submenu index="1">
+                            <template slot="title">
+                                <i class="iconfont icon-yunshuzhongwuliu menu-icon"></i>
+                                <span>发货单管理</span>
+                            </template>
+                            <el-menu-item index="1-1">原送货单</el-menu-item>
+                            <el-menu-item index="1-2">发货单列表</el-menu-item>
+                        </el-submenu>
+                        <el-submenu index="2">
+                            <template slot="title">
+                                <i class="iconfont icon-hezuoguanxi menu-icon"></i>
+                                <span>客户管理</span>
+                            </template>
+                            <el-menu-item index="2-1">客户列表</el-menu-item>
+                        </el-submenu>
+                        <el-submenu index="3">
+                            <template slot="title">
+                                <i class="iconfont icon-baoguofahuo menu-icon"></i>
+                                <span>产品管理</span>
+                            </template>
+                            <el-menu-item index="3-1">产品列表</el-menu-item>
+                        </el-submenu>
+                        <el-submenu index="5">
+                            <template slot="title">
+                                <i class="el-icon-menu"></i>
+                                <span>基础管理</span>
+                            </template>
+                            <el-menu-item index="5-1">公司联系人</el-menu-item>
+                        </el-submenu>
+                        <el-submenu index="4" v-if="loginUser.code === 'admin'">
+                            <template slot="title">
+                                <i class="el-icon-setting"></i>
+                                <span>系统管理</span>
+                            </template>
+                            <el-menu-item index="4-1">系统初始化</el-menu-item>
+                            <el-menu-item index="4-2">用户列表</el-menu-item>
+                        </el-submenu>
+                    </el-menu>
+                </div>
+            </div>
+        </el-aside>
+        <el-container>
+            <el-header height="50px">
+                <!--这里是头部-->
+                <div class="btn_list">
+                    <span class="company_name">{{companyInfo.name}}</span>
+                    <el-button type="text" size="small" class="iconfont icon-yonghu">{{loginUser.userName}}</el-button>
+                    <el-button type="text" size="small" class="iconfont icon-logout" @click="logout">退出</el-button>
+                </div>
+            </el-header>
+            <el-main v-loading="loading" element-loading-text="加载中" element-loading-background="rgba(0, 0, 0, 0.8)">
+                <!--这里是内容-->
+                <iframe :src="srcUrl" id="main-iframe" ref="iframe" width="100%" height="100%"></iframe>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            routMap: {
+                '1-1': '../delivery.html',
+                '1-2': '../delivery/delivery.html',
+                '2-1': '../customer/customer.html',
+                '3-1': '../product/product.html',
+                '4-1': '../system/init.html',
+                '4-2': '../user/user.html',
+                '5-1': '../basic/companyContact.html'
+            },
+            activeMenuIndex: '1-1',
+            srcUrl: '',
+            loading: true,
+            loginUser: {},
+            companyInfo: {}
+        },
+        created() {
+            this.loginUser = JSON.parse(sessionStorage.getItem('userInfo'));
+            if (!this.loginUser) {
+                window.location.href = "../index/login.html";
+                return false;
+            }
+        },
+        mounted() {
+            this.companyInfo = JSON.parse(localStorage.getItem('companyInfo'));
+            if (!this.companyInfo) {
+                if (this.loginUser.code === 'admin') {
+                    this.activeMenuIndex = '4-1';
+                    this.srcUrl = this.routMap[this.activeMenuIndex];
+                    this.$refs['leftMenu'].close('1');
+                    this.companyInfo = {
+                        name: '未设置公司'
+                    };
+                } else {
+                    window.location.href = "../index/login.html";
+                    return false;
+                }
+            } else {
+                this.activeMenuIndex = '1-1';
+                this.srcUrl = this.routMap[this.activeMenuIndex];
+            }
+            this.init();
+        },
+        methods: {
+            handleSelect(key, keyPath) {
+                if (this.routMap[key] !== this.srcUrl) {
+                    this.loading = true;
+                    this.srcUrl = this.routMap[key];
+                    this.init();
+                }
+            },
+            init() {
+                this.$refs.iframe.addEventListener("load", () => {
+                    this.loading = false;
+                }, false);
+            },
+            logout() {
+                sessionStorage.removeItem('userInfo');
+                window.location.href = "../index/login.html";
+            }
+        }
+    });
+</script>
+</html>

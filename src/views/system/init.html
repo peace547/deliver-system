@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>发货管理系统</title>
+    <!-- import Vue before Element -->
+    <script src="../../resource/vendor/vue/vue_dev.js"></script>
+    <script src="../../resource/vendor/element-ui/lib/index.js"></script>
+    <!-- import JavaScript -->
+    <link rel="stylesheet" href="../../resource/vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../../resource/css/common/global.css">
+
+    <style type="text/css">
+        .demo-form.demo-zh-CN .el-checkbox-group {
+            width: 320px;
+            margin: 0;
+            padding: 0;
+            list-style: none
+        }
+
+        .demo-form.demo-zh-CN .el-checkbox-group .el-checkbox {
+            float: left;
+            width: 160px;
+            margin: 0;
+            padding: 0;
+        }
+        .el-breadcrumb {
+            padding: 10px 0;
+        }
+        .card-header{
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <el-container>
+        <el-header height="32px">
+            <el-breadcrumb separator-class="el-icon-arrow-right">
+                <el-breadcrumb-item>系统管理</el-breadcrumb-item>
+                <el-breadcrumb-item>用户列表</el-breadcrumb-item>
+            </el-breadcrumb>
+        </el-header>
+        <el-main style="padding-top: 0;">
+            <el-row :gutter="20">
+                <el-col :span="10">
+                    <el-card class="box-card">
+                        <div slot="header" class="clear-fix card-header">
+                            <span>初始化表</span>
+                        </div>
+                        <div class="demo-block demo-box demo-zh-CN demo-form">
+                            <el-form ref="createTableForm" :model="createTableForm" label-width="80px">
+                                <el-form-item label="创建表">
+                                    <el-checkbox-group v-model="createTableForm.checkedTables">
+                                        <el-checkbox v-for="(table,index) in tables" :label="index" :key="table.tableName">{{table.desc}}</el-checkbox>
+                                    </el-checkbox-group>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button type="primary" @click="createTables">创建</el-button>
+                                    <el-button @click="resetCreateTableForm">重置</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+                    </el-card>
+                </el-col>
+                <el-col :span="8">
+                    <el-card class="box-card">
+                        <div slot="header" class="clear-fix card-header">
+                            <span>公司入驻</span>
+                        </div>
+                        <div class="demo-block demo-box demo-zh-CN demo-form">
+                            <el-form ref="addCompanyForm" :rules="rules" :model="addCompanyForm" label-width="80px">
+                                <el-form-item label="公司名称" prop="name">
+                                    <el-input v-model="addCompanyForm.name"></el-input>
+                                </el-form-item>
+                                <el-form-item label="公司地址" prop="address">
+                                    <el-input v-model="addCompanyForm.address"></el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button type="primary" @click="addCompany">入驻</el-button>
+                                    <el-button @click="resetAddCompanyForm">重置</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+                    </el-card>
+                </el-col>
+            </el-row>
+        </el-main>
+    </el-container>
+</div>
+</body>
+<script src="../../resource/vendor/lodash.min.js"></script>
+<script src="../../resource/js/common/webSqlUtils.js"></script>
+<script src="../../resource/js/init.js"></script>
+</html>
+
+

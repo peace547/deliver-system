@@ -1,0 +1,81 @@
+body {
+    background-color: #8cdbec;
+}
+
+#app {
+    height: 100%;
+}
+
+.el-container {
+    height: 100%;
+}
+
+.el-header {
+    background-color: #ffffff;
+}
+
+.head_content {
+    width: 1124px;
+    height: 86px;
+    margin: 0 auto;
+    line-height: 86px;
+    color: #50b0ec;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.el-main {
+    overflow: hidden;
+    min-height: 511px;
+}
+
+.content {
+    width: 1124px;
+    margin: 0 auto;
+}
+
+.background {
+    width: 574px;
+    height: 511px;
+    float: left;
+    margin: 0 auto;
+    background: url(../images/login_bg.png) no-repeat left center;
+}
+
+.login-window {
+    width: 396px;
+    background: #fff;
+    float: right;
+    border-radius: 5px;
+    margin-top: 100px;
+}
+
+.login-title {
+    color: #333;
+    font-size: 18px;
+    margin: 34px 40px;
+}
+
+.login-form {
+    width: 316px;
+    margin: 0 40px 30px 40px;
+}
+
+.el-input__prefix {
+    left: 7px;
+}
+
+.login_btn {
+    float: left;
+    width: 130px;
+}
+
+.reset_btn {
+    float: right;
+    width: 130px;
+}
+
+.el-footer {
+    text-align: center;
+    line-height: 60px;
+}

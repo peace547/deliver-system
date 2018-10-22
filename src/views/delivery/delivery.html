@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>发货管理系统</title>
+    <!-- import Vue before Element -->
+    <script src="../../resource/vendor/vue/vue_dev.js"></script>
+    <!-- import JavaScript -->
+    <script src="../../resource/vendor/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="../../resource/vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../../resource/css/common/global.css">
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <el-breadcrumb separator-class="el-icon-arrow-right">
+            <el-breadcrumb-item>发货管理</el-breadcrumb-item>
+            <el-breadcrumb-item>发货列表</el-breadcrumb-item>
+        </el-breadcrumb>
+        <div class="search_area search">
+            <el-form ref="searchForm" :model="searchForm" label-width="70px" size="small" :inline="true">
+                <!-- 订单编号、送货时间、客户、打印状态 -->
+                <el-form-item label="订单编号" prop="orderNo">
+                    <el-input v-model="searchForm.orderNo" placeholder="订单编号"></el-input>
+                </el-form-item>
+                <el-form-item label="收货单位" prop="customerId">
+                    <el-select v-model="searchForm.customerId" placeholder="收货单位">
+                        <el-option v-for="(customer) in customerList" :key="customer.id" :label="customer.name" :value="customer.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="打印状态" prop="isPrinted">
+                    <el-select v-model="searchForm.isPrinted" placeholder="打印状态">
+                        <el-option v-for="(status) in printOptions" :key="status.code" :label="status.desc" :value="status.code">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="onSearch()" icon="el-icon-search">搜索</el-button>
+                    <el-button @click="onReset" icon="el-icon-refresh">重置</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+        <div class="table_area dialog" v-loading="loading">
+            <el-row>
+                <el-button type="success" plain size="small" icon="el-icon-circle-plus-outline" @click="openAddDialog()">新增</el-button>
+                <el-button type="primary" plain size="small" icon="el-icon-edit" @click="openEditDialog()">编辑</el-button>
+                <el-button type="danger" plain size="small" icon="el-icon-delete" @click="handleDelete()">删除</el-button>
+            </el-row>
+            <el-table ref="multipleTable" tooltip-effect="dark" @row-click="handleRowClick" @selection-change="handleSelectionChange"
+                :data="deliveryList" style="width: 100%" :stripe="true">
+                <el-table-column type="selection" width="50"></el-table-column>
+                <el-table-column prop="orderNo" label="订单编号" width="100"></el-table-column>
+                <el-table-column prop="stockOutDate" label="送货时间" width="130" :formatter="stockOutDateFormatter"></el-table-column>
+                <el-table-column prop="customer.name" label="收货单位" width="100"></el-table-column>
+                <el-table-column prop="companyContact.contactName" label="经办个人" width="120"></el-table-column>
+                <el-table-column prop="isPrinted" label="打印状态" width="80" :formatter="printStatusFormatter"></el-table-column>
+                <el-table-column prop="createTime" label="创建时间" width="180" :formatter="dateFormatter"></el-table-column>
+                <el-table-column prop="createPerson" label="创建人" width="100"></el-table-column>
+                <el-table-column prop="updateTime" label="更新时间" width="160" :formatter="dateFormatter"></el-table-column>
+                <el-table-column prop="updatePerson" label="更新人" width="100"></el-table-column>
+                <el-table-column label="操作" column-key="optionColumn">
+                    <template slot-scope="scope">
+                        <el-button size="mini" type="primary" @click="printDelivery(scope.row)">打印</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :page-sizes="[1, 2, 3, 4]" :current-page.sync="currentPage"
+                :page-size="deliveryListPageSize" layout="total, sizes, prev, pager, next, jumper" :total="deliveryListLength" class="center_page">
+            </el-pagination>
+        </div>
+        <el-dialog :title="isAdd | dialogTitleFilter" :visible.sync="editDialogVisible" @closed="onDeliveryDialogClosed" width="80%">
+            <el-form ref="deliveryForm" :model="deliveryForm" :rules="rules" label-width="100px" :inline="true">
+                <!-- 订单编号、送货时间、客户、经办个人、发货单明细 -->
+                <el-form-item label="订单编号" prop="orderNo">
+                    <el-input v-model="deliveryForm.orderNo" placeholder="订单编号" auto-complete="off" :disabled="!isAdd">
+                        <el-button slot="append" icon="el-icon-circle-plus-outline" :disabled="!isAdd" @click="generateOrderNo"></el-button>
+                    </el-input>
+                </el-form-item>
+                <el-form-item label="送货时间" prop="stockOutDate">
+                    <el-date-picker type="date" placeholder="选择日期" v-model="deliveryForm.stockOutDate"></el-date-picker>
+                </el-form-item>
+                <el-form-item label="收货单位" prop="customerId">
+                    <el-select v-model="deliveryForm.customerId" placeholder="收货单位">
+                        <el-option v-for="(customer) in customerList" :key="customer.id" :label="customer.name" :value="customer.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="经办个人" prop="companyContactId">
+                    <el-select v-model="deliveryForm.companyContactId" placeholder="经办个人">
+                        <el-option v-for="(companyContact) in companyContactList" :key="companyContact.id" :label="companyContact.contactName" :value="companyContact.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <el-row>
+                <el-button type="success" plain size="small" icon="el-icon-circle-plus-outline" @click="openDetailAddDialog()">新增</el-button>
+                <el-button type="primary" plain size="small" icon="el-icon-edit" @click="openDetailEditDialog">编辑</el-button>
+                <el-button type="danger" plain size="small" icon="el-icon-delete" @click="deleteDeliveryDetail">删除</el-button>
+            </el-row>
+            <el-table ref="singleTable" :data="deliveryDetailList" style="width: 100%" highlight-current-row :row-class-name="tableRowClassName"
+                @current-change="handleCurrentChange">
+                <el-table-column type="index" label="序号"></el-table-column>
+                <el-table-column property="product.name" label="品名" width="100"></el-table-column>
+                <el-table-column property="product.specification" label="规格" width="100"></el-table-column>
+                <el-table-column property="quantity" label="数量" width="60"></el-table-column>
+                <el-table-column property="product.unit" label="单位" width="50"></el-table-column>
+                <el-table-column property="price" label="单价" width="50"></el-table-column>
+                <el-table-column property="packageQuantity" label="装箱总件数" width="100"></el-table-column>
+                <el-table-column property="packageSize" label="附件/件" width="80"></el-table-column>
+                <el-table-column property="totalPrice" label="总价" width="80"></el-table-column>
+                <el-table-column property="remark" label="备注"></el-table-column>
+            </el-table>
+            <el-dialog width="30%" :title="detailDialogTitleComputed" :visible.sync="detailEditDialogVisible" @closed="onDeliveryDetailDialogClosed"
+                append-to-body>
+                <el-form ref="deliveryDetailForm" :model="deliveryDetailForm" :rules="detailRules" label-width="100px">
+                    <el-form-item label="发货产品" prop="productId">
+                        <el-select v-model="deliveryDetailForm.productId" placeholder="发货产品" @change="onProductSelected">
+                            <el-option v-for="(product) in productList" :key="product.id" :label="product.name" :value="product.id">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="数量" prop="quantity">
+                        <el-input-number v-model="deliveryDetailForm.quantity" :precision="0" :min="0" :step="10"></el-input-number>
+                    </el-form-item>
+                    <el-form-item label="单价" prop="price">
+                        <el-input-number v-model="deliveryDetailForm.price" :precision="2" :min="0" :step="1"></el-input-number>
+                    </el-form-item>
+                    <el-form-item label="件/箱" prop="packageSize">
+                        <el-input-number v-model="deliveryDetailForm.packageSize" :precision="0" :min="0" :step="10"></el-input-number>
+                    </el-form-item>
+                    <el-form-item label="备注" prop="remark">
+                        <el-input v-model="deliveryDetailForm.remark" placeholder="备注" auto-complete="off"></el-input>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button @click="detailEditDialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="addOrEditDeliveryDetail()">确 定</el-button>
+                </div>
+            </el-dialog>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="editDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="addOrEditDelivery()">确 定</el-button>
+            </div>
+        </el-dialog>
+
+        <div style="display: none;" v-if="deliveryPrintData">
+            <div id="print-content">
+                <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; text-align: center; font-size: 12px; line-height: 26px; width: 100%;">
+                    <tr>
+                        <td colspan="4" style="font-size: 16px; height: 40px;">送货单</td>
+                    </tr>
+                    <tr>
+                        <td width="16%">送货单位名称</td>
+                        <td width="34%">{{companyInfo.name}}</td>
+                        <td width="16%">订单编号</td>
+                        <td width="34%">{{deliveryPrintData.orderNo}}</td>
+                    </tr>
+                    <tr>
+                        <td>送单位地址</td>
+                        <td>{{companyInfo.address}}</td>
+                        <td>收货单位名称</td>
+                        <td>{{deliveryPrintData.customer.name}}</td>
+                    </tr>
+                    <tr>
+                        <td>经办个人</td>
+                        <td>{{deliveryPrintData.companyContact.contactName}}</td>
+                        <td>收货单位地址</td>
+                        <td>{{deliveryPrintData.customer.address}}</td>
+                    </tr>
+                    <tr>
+                        <td>联系电话</td>
+                        <td>{{deliveryPrintData.companyContact.contactPhone}}</td>
+                        <td>收货联系人</td>
+                        <td>{{deliveryPrintData.customer.contactName}}</td>
+                    </tr>
+                    <tr>
+                        <td>送货日期</td>
+                        <td>{{deliveryPrintData.stockOutDate}}</td>
+                        <td>联系电话</td>
+                        <td>{{deliveryPrintData.customer.contactPhone}}</td>
+                    </tr>
+                </table>
+                <table style="border-left: 1px solid #000000;border-right: 1px solid #000000; width: 100%; font-size: 12px; line-height: 26px;">
+                    <tr>
+                        <td style="padding-left: 5px;">发送产品列表如下：</td>
+                    </tr>
+                </table>
+                <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; width: 100%; text-align: center; font-size: 12px; line-height: 26px;">
+                    <tr>
+                        <td width="5%">序号</td>
+                        <td width="19%">品名</td>
+                        <td width="14%">规格</td>
+                        <td width="7%">数量</td>
+                        <td width="5%">单位</td>
+                        <td width="5%">单价</td>
+                        <td width="10%">装箱总件数</td>
+                        <td width="7%">附件/件</td>
+                        <td width="8%">总价</td>
+                        <td width="20%">备注</td>
+                    </tr>
+                    <tr v-for="(deliveryDetail, index) in deliveryDetailListPrintData">
+                        <td>{{index}}</td>
+                        <td>{{deliveryDetail.product.name}}</td>
+                        <td>{{deliveryDetail.product.specification}}</td>
+                        <td>{{deliveryDetail.quantity}}</td>
+                        <td>{{deliveryDetail.product.unit}}</td>
+                        <td>{{deliveryDetail.price}}</td>
+                        <td>{{deliveryDetail.price}}</td>
+                        <td>{{deliveryDetail.packageSize}}</td>
+                        <td>{{deliveryDetail.price}}</td>
+                        <td>{{deliveryDetail.remark}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">总计:</td>
+                        <td colspan="8">123</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../../resource/vendor/jquery.min.js"></script>
+<script type="text/JavaScript" src="../../resource/vendor/jquery-printarea/jquery.PrintArea.js"></script>
+<script src="../../resource/vendor/lodash.min.js"></script>
+<script src="../../resource/vendor/moment.js"></script>
+<script src="../../resource/js/common/webSqlUtils.js"></script>
+<script src="../../resource/js/deliveryManager.js"></script>
+<script src="../../resource/js/delivery.js"></script>
+
+</html>

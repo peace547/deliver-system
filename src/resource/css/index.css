@@ -1,0 +1,59 @@
+#app {
+    height: 100%;
+}
+
+.el-container {
+    height: 100%;
+}
+
+.el-header {
+    padding: 0;
+    background-color: #ffffff;
+}
+
+.index_logo {
+    width: 200px;
+    line-height: 50px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: bold;
+    background-color: #23262e;
+}
+
+.btn_list {
+    position: absolute;
+    top: 0;
+    right: 24px;
+    line-height: 50px;
+}
+
+.company_name {
+    font-size: 16px;
+    font-style: normal;
+    color: #999;
+    margin-right: 10px;
+}
+
+.el-aside {
+    overflow-x: hidden;
+    background-color: #23262e;
+}
+
+.index-side-scroll {
+    width: 220px;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.index-menu {
+    width: 202px;
+}
+
+.el-main {
+    height: 100%;
+    background-color: #E9EEF3;
+    overflow: hidden;
+    padding: 0;
+}
+

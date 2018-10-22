@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用户登录</title>
+    <!-- import Vue before Element -->
+    <script src="../../resource/vendor/vue/vue_dev.js"></script>
+    <!-- import JavaScript -->
+    <script src="../../resource/vendor/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="../../resource/vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" type="text/css" href="../../resource/css/icon/iconfont.css">
+    <link rel="stylesheet" href="../../resource/css/common/global.css">
+    <link rel="stylesheet" href="../../resource/css/login.css">
+</head>
+<body>
+<div id="app" v-cloak>
+    <el-container>
+        <el-header height="86px">
+            <div class="head_content">发货管理系统</div>
+        </el-header>
+        <el-container>
+            <el-main>
+                <div class="content clear-fix">
+                    <div class="background"></div>
+                    <div class="login-window">
+                        <div class="login-title">用户登录</div>
+                        <div class="login-form">
+                            <el-form :model="loginForm" :rules="rules" ref="loginForm" class="demo-ruleForm">
+                                <el-form-item prop="userName">
+                                    <el-input v-model="loginForm.userName" placeholder="用户名"
+                                              prefix-icon="iconfont icon-yonghu login-icon"></el-input>
+                                </el-form-item>
+                                <el-form-item prop="password">
+                                    <el-input v-model="loginForm.password" placeholder="密码" type="password"
+                                              prefix-icon="iconfont icon-suoding login-icon"></el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button type="primary" @click="submitForm('loginForm')" class="login_btn"
+                                               :loading="loginLoading">{{loginBtnLabel}}
+                                    </el-button>
+                                    <el-button @click="resetForm('loginForm')" class="reset_btn">重置</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+                    </div>
+                </div>
+            </el-main>
+            <el-footer>版本:V 1.0</el-footer>
+        </el-container>
+    </el-container>
+</div>
+</body>
+<script src="../../resource/js/common/webSqlUtils.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            loginLoading: false,
+            loginBtnLabel: '登录',
+            companyInfo: {},
+            loginForm: {
+                userName: '',
+                password: ''
+            },
+            rules: {
+                userName: [
+                    {required: true, message: '请输入用户名', trigger: 'blur'}
+                ],
+                password: [
+                    {required: true, message: '请输入密码', trigger: 'blur'}
+                ]
+            }
+        },
+        created() {
+            this.companyInfo = JSON.parse(localStorage.getItem('companyInfo'));
+        },
+        mounted() {
+            // 打开数据库连接
+            webSqlUtils.openDb();
+            if (!webSqlUtils.database) {
+                this.$message.error('链接数据库异常');
+            }
+        },
+        methods: {
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        this.loginLoading = true;
+                        this.loginBtnLabel = '登录中';
+                        if (this.loginForm.userName === 'admin') {
+                            this.adminLogin();
+                        } else {
+                            this.normalUserLogin();
+                        }
+                        this.loginLoading = false;
+                        this.loginBtnLabel = '登录';
+                    } else {
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            },
+            adminLogin() {
+                if (this.loginForm.password === '123654') {
+                    let userInfo = {
+                        id: 0,
+                        code: 'admin',
+                        userName: '超级管理员'
+                    };
+                    this.loginSuccess(userInfo);
+                } else {
+                    this.loginFailed();
+                }
+            },
+            normalUserLogin() {
+                if (!this.companyInfo) {
+                    this.$message.error('公司尚未入驻');
+                    return false;
+                }
+
+                let selectUserSql = 'select * from user where companyId = ? and code = ? and password = ?';
+                let selectUserParamArr = [];
+                selectUserParamArr.push(this.companyInfo.id);
+                selectUserParamArr.push(this.loginForm.userName);
+                selectUserParamArr.push(this.loginForm.password);
+                webSqlUtils.exeSql(selectUserSql, selectUserParamArr).then((result) => {
+                    if (result.rows.length === 1) {
+                        if (result.rows[0].status === 1) {
+                            let userInfo = {
+                                id: result.rows[0].id,
+                                code: result.rows[0].code,
+                                userName: result.rows[0].name
+                            };
+                            this.loginSuccess(userInfo);
+                        } else {
+                            this.$message.error('登录失败，该用户已被禁用');
+                        }
+                    } else {
+                        this.loginFailed();
+                    }
+                }).catch(function (error) {
+                    webSqlUtils.commonDBReject(error, this.$message);
+                });
+            },
+            loginSuccess(userInfo) {
+                // 将用户信息存储值sessionStorage
+                sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+                // 页面跳转
+                window.location.href = "index.html";
+            },
+            loginFailed() {
+                this.$message.error('登录失败，用户名或密码错误');
+            }
+        }
+    });
+</script>
+</html>
